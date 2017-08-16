@@ -190,7 +190,7 @@ void MOTHeader::AddExtension(int param_id, const uint8_t* data_field, size_t dat
 
 
 // --- SLSManager -----------------------------------------------------------------
-const size_t SLSManager::MAXSEGLEN       =  8189; // Bytes (EN 301 234 v2.1.1, ch. 5.1.1)
+const size_t SLSManager::MAXSEGLEN_SPEC       =  8189; // Bytes (EN 301 234 v2.1.1, ch. 5.1.1)
 const size_t SLSManager::MAXSLIDESIZE    = 51200; // Bytes (TS 101 499 v3.1.1, ch. 9.1.2)
 const int    SLSManager::MINQUALITY      =    40; // Do not allow the image compressor to go below JPEG quality 40
 const std::string SLSManager::SLS_PARAMS_SUFFIX = ".sls_params";

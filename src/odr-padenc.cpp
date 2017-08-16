@@ -94,9 +94,9 @@ static void usage(const char* name) {
                     " -R, --raw-slides       Do not process slides. Integrity checks and resizing\n"
                     "                          slides is skipped. Use this if you know what you are doing !\n"
                     "                          It is useful only when -d is used\n"
+                    " -m, --max-seg-len      Sets the maximum segment length. Must be between 250 and 8189 \n"
                     " -v, --verbose          Print more information to the console\n",
-                    SLEEPDELAY_DEFAULT, PADPacketizer::ALLOWED_PADLEN.c_str()
-           );
+            SLEEPDELAY_DEFAULT, PADPacketizer::ALLOWED_PADLEN.c_str());
 }
 
 
@@ -169,6 +169,7 @@ int main(int argc, char *argv[]) {
     const char* output = "/tmp/pad.fifo";
     std::vector<std::string> dls_files;
     int curr_dls_file = 0;
+    int max_segment_length = SLSManager::MAXSEGLEN_SPEC;
 
     const struct option longopts[] = {
         {"charset",    required_argument,  0, 'c'},
@@ -181,13 +182,14 @@ int main(int argc, char *argv[]) {
         {"pad",        required_argument,  0, 'p'},
         {"sleep",      required_argument,  0, 's'},
         {"raw-slides", no_argument,        0, 'R'},
+        {"max-seg-len",required_argument,  0, 'm'},
         {"help",       no_argument,        0, 'h'},
         {"verbose",    no_argument,        0, 'v'},
         {0,0,0,0},
     };
 
     int ch;
-    while((ch = getopt_long(argc, argv, "eChRrc:d:o:p:s:t:v", longopts, NULL)) != -1) {
+    while((ch = getopt_long(argc, argv, "eChRrc:d:o:p:s:m:t:v", longopts, NULL)) != -1) {
         switch (ch) {
             case 'c':
                 dl_params.charset = (DABCharset) atoi(optarg);
@@ -219,6 +221,9 @@ int main(int argc, char *argv[]) {
             case 'R':
                 raw_slides = true;
                 break;
+            case 'm':
+                max_segment_length = atoi(optarg);
+                break;
             case 'v':
                 verbose++;
                 break;
@@ -232,6 +237,15 @@ int main(int argc, char *argv[]) {
     if (!PADPacketizer::CheckPADLen(padlen)) {
         fprintf(stderr, "ODR-PadEnc Error: PAD length %zu invalid: Possible values: %s\n",
                 padlen, PADPacketizer::ALLOWED_PADLEN.c_str());
+        return 2;
+    }
+
+    if (max_segment_length < 250 || max_segment_length > SLSManager::MAXSEGLEN_SPEC)
+    {
+        fprintf(stderr, "mot-encoder Error: max segment length %d invalid: Possible values:[%d, %d]\n",
+                max_segment_length,
+                250,
+                SLSManager::MAXSEGLEN_SPEC);
         return 2;
     }
 
@@ -310,7 +324,7 @@ int main(int argc, char *argv[]) {
 
     PADPacketizer pad_packetizer(padlen);
     DLSManager dls_manager(&pad_packetizer);
-    SLSManager sls_manager(&pad_packetizer);
+    SLSManager sls_manager(&pad_packetizer, max_segment_length);
 
     std::list<slide_metadata_t> slides_to_transmit;
     History slides_history;

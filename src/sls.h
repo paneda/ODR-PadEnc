@@ -204,8 +204,10 @@ public:
 
 // --- SLSManager -----------------------------------------------------------------
 class SLSManager {
+public:
+    static const size_t MAXSEGLEN_SPEC;
 private:
-    static const size_t MAXSEGLEN;
+    const size_t MAXSEGLEN;
     static const size_t MAXSLIDESIZE;
     static const int    MINQUALITY;
     static const std::string SLS_PARAMS_SUFFIX;
@@ -228,10 +230,10 @@ private:
     int cindex_header;
     int cindex_body;
 public:
-    SLSManager(PADPacketizer* pad_packetizer) : pad_packetizer(pad_packetizer), cindex_header(0), cindex_body(0) {}
+    SLSManager(PADPacketizer *pad_packetizer, int max_segment_length) : MAXSEGLEN(max_segment_length), pad_packetizer(pad_packetizer), cindex_header(0), cindex_body(0) {}
 
-    bool encodeFile(const std::string& fname, int fidx, bool raw_slides);
-    static bool isSlideParamFileFilename(const std::string& filename);
+    bool encodeFile(const std::string &fname, int fidx, bool raw_slides);
+    static bool isSlideParamFileFilename(const std::string &filename);
 };
 
 #endif /* SLS_H_ */
