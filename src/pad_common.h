@@ -82,6 +82,7 @@ private:
     const size_t xpad_size_max;
     const bool short_xpad;
     const size_t max_cis;
+    const bool never_omit_cis;
 
     std::deque<DATA_GROUP*> queue;
 
@@ -113,7 +114,7 @@ private:
 public:
     static const std::string ALLOWED_PADLEN;
 
-    PADPacketizer(size_t pad_size);
+    PADPacketizer(size_t pad_size, bool never_omit_cis);
     ~PADPacketizer();
 
     void AddDG(DATA_GROUP* dg, bool prepend);

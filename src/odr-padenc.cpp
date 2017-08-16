@@ -95,6 +95,7 @@ static void usage(const char* name) {
                     "                          slides is skipped. Use this if you know what you are doing !\n"
                     "                          It is useful only when -d is used\n"
                     " -m, --max-seg-len      Sets the maximum segment length. Must be between 250 and 8189 \n"
+                    " -n, --no-omit-ci       Never omit CI's\n"
                     " -v, --verbose          Print more information to the console\n",
             SLEEPDELAY_DEFAULT, PADPacketizer::ALLOWED_PADLEN.c_str());
 }
@@ -170,6 +171,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> dls_files;
     int curr_dls_file = 0;
     int max_segment_length = SLSManager::MAXSEGLEN_SPEC;
+    bool no_omit_ci = false;
 
     const struct option longopts[] = {
         {"charset",    required_argument,  0, 'c'},
@@ -183,13 +185,14 @@ int main(int argc, char *argv[]) {
         {"sleep",      required_argument,  0, 's'},
         {"raw-slides", no_argument,        0, 'R'},
         {"max-seg-len",required_argument,  0, 'm'},
+        {"no-omit-ci", no_argument,        0, 'n'},
         {"help",       no_argument,        0, 'h'},
         {"verbose",    no_argument,        0, 'v'},
         {0,0,0,0},
     };
 
     int ch;
-    while((ch = getopt_long(argc, argv, "eChRrc:d:o:p:s:m:t:v", longopts, NULL)) != -1) {
+    while((ch = getopt_long(argc, argv, "eChRrcn:d:o:p:s:m:t:v", longopts, NULL)) != -1) {
         switch (ch) {
             case 'c':
                 dl_params.charset = (DABCharset) atoi(optarg);
@@ -223,6 +226,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'm':
                 max_segment_length = atoi(optarg);
+                break;
+            case 'n':
+                no_omit_ci = true;
                 break;
             case 'v':
                 verbose++;
@@ -322,7 +328,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "ODR-PadEnc using ImageMagick version '%s'\n", GetMagickVersion(NULL));
 #endif
 
-    PADPacketizer pad_packetizer(padlen);
+    PADPacketizer pad_packetizer(padlen, no_omit_ci);
     DLSManager dls_manager(&pad_packetizer);
     SLSManager sls_manager(&pad_packetizer, max_segment_length);
 

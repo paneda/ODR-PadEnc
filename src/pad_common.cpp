@@ -82,10 +82,11 @@ const size_t PADPacketizer::VARSIZE_PAD_MIN     =   8; // F-PAD + 1x CI + end ma
 const size_t PADPacketizer::VARSIZE_PAD_MAX     = 196; // F-PAD + 4x CI              + 4x 48 bytes data sub-field
 const std::string PADPacketizer::ALLOWED_PADLEN = "6 (short X-PAD), 8 to 196 (variable size X-PAD)";
 
-PADPacketizer::PADPacketizer(size_t pad_size) :
+PADPacketizer::PADPacketizer(size_t pad_size, bool never_omit_cis) :
     xpad_size_max(pad_size - FPAD_LEN),
     short_xpad(pad_size == SHORT_PAD),
     max_cis(short_xpad ? 1 : 4),
+    never_omit_cis(never_omit_cis),
     last_ci_type(-1)
 {
     ResetPAD();
@@ -216,6 +217,7 @@ bool PADPacketizer::AppendDG(DATA_GROUP* dg) {
      * 4bb. the amount of available DG bytes being at least as big as the size of the last X-PAD in case all CIs are used
      */
     if (
+            !never_omit_cis &&
             used_cis == 0 &&
             last_ci_type != -1 &&
             last_ci_type == dg->apptype_cont &&
