@@ -8,7 +8,7 @@ GITVERSION_FLAGS =
 endif
 
 odr_padenc_CXXFLAGS = $(GITVERSION_FLAGS) @MAGICKWAND_CFLAGS@ -Icontrib -Wall -Wextra
-odr_padenc_LDADD    = @MAGICKWAND_LDADD@
+odr_padenc_LDADD    = @MAGICKWAND_LDADD@ -lrt
 odr_padenc_SOURCES  = \
 					  src/odr-padenc.cpp \
 					  src/common.cpp \
