@@ -34,3 +34,6 @@ odr-padenc
 /.cproject
 /.project
 /.settings/
+
+#vscode
+.vscode
