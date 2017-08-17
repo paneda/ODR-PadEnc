@@ -132,7 +132,8 @@ pad_t* PADPacketizer::GetPAD() {
     return FlushPAD();
 }
 
-void PADPacketizer::WriteAllPADs(int output_fd, int limit) {
+void PADPacketizer::WriteAllPADs(boost::interprocess::message_queue& output_queue, int limit)
+{
     size_t error_count = 0;
     size_t error_bytes = 0;
 
@@ -146,7 +147,10 @@ void PADPacketizer::WriteAllPADs(int output_fd, int limit) {
             break;
         }
 
-        if (write(output_fd, &(*pad)[0], pad->size()) != (signed) pad->size()) {
+        try{
+            output_queue.send(&(*pad)[0], pad->size(), 0);
+        }
+        catch(std::exception& ex){
             error_count++;
             error_bytes += pad->size();
         }
