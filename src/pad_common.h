@@ -37,6 +37,7 @@
 #include <string>
 #include <stdint.h>
 #include <unistd.h>
+#include <boost/interprocess/ipc/message_queue.hpp>
 
 #include "crc.h"
 
@@ -124,7 +125,7 @@ public:
     pad_t* GetPAD();
 
     // will be removed, when pull (instead of push) approach is implemented!
-    void WriteAllPADs(int output_fd, int limit = -1);
+    void WriteAllPADs(boost::interprocess::message_queue& output_queue, int limit = -1);
 
     static DATA_GROUP* CreateDataGroupLengthIndicator(size_t len);
     static bool CheckPADLen(size_t len);

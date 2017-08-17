@@ -39,6 +39,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <getopt.h>
+#include <boost/interprocess/ipc/message_queue.hpp>
 
 #include "pad_common.h"
 #include "dls.h"
@@ -62,7 +63,7 @@ static void usage(const char* name) {
                     "By CSP Innovazione nelle ICT s.c.a r.l. (http://rd.csp.it/) and\n"
                     "Opendigitalradio.org\n\n"
                     "Reads image data from the specified directory, DLS text from a file,\n"
-                    "and outputs PAD data to the given FIFO.\n"
+                    "and outputs PAD data to the given FIFO (in the form of boost message queue).\n"
                     "  http://opendigitalradio.org\n\n",
 #if defined(GITVERSION)
                     GITVERSION
@@ -76,7 +77,7 @@ static void usage(const char* name) {
                     "                          been encoded.\n"
                     " -s, --sleep=DELAY      Wait DELAY seconds between each slide\n"
                     "                          Default: %d\n"
-                    " -o, --output=FILENAME  FIFO to write PAD data into.\n"
+                    " -o, --output=QUEUE_NAME  boost message queue to write PAD data into.\n"
                     "                          Default: /tmp/pad.fifo\n"
                     " -t, --dls=FILENAME     FIFO or file to read DLS text from.\n"
                     "                          If specified more than once, use next file after DELAY seconds.\n"
@@ -167,7 +168,7 @@ int main(int argc, char *argv[]) {
     DL_PARAMS dl_params;
 
     const char* sls_dir = NULL;
-    const char* output = "/tmp/pad.fifo";
+    const char* output = "tmp_pad_queue";
     std::vector<std::string> dls_files;
     int curr_dls_file = 0;
     int max_segment_length = SLSManager::MAXSEGLEN_SPEC;
@@ -316,9 +317,17 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    int output_fd = open(output, O_WRONLY);
-    if (output_fd == -1) {
+    std::unique_ptr<boost::interprocess::message_queue> output_queue;
+    
+    try 
+    {
+        output_queue = std::make_unique<boost::interprocess::message_queue>(boost::interprocess::open_only,
+                                                                            output);
+    }
+    catch (std::exception& ex)
+    {
         perror("ODR-PadEnc Error: failed to open output");
+        perror(ex.what());
         return 3;
     }
 
@@ -381,7 +390,7 @@ int main(int argc, char *argv[]) {
                 if (not dls_files.empty())
                     dls_manager.writeDLS(dls_files[curr_dls_file], dl_params);
 
-                pad_packetizer.WriteAllPADs(output_fd, DLS_REPETITION_WHILE_SLS);
+                pad_packetizer.WriteAllPADs(*output_queue, DLS_REPETITION_WHILE_SLS);
             }
         }
 
@@ -394,19 +403,13 @@ int main(int argc, char *argv[]) {
         }
 
         // flush all remaining PADs
-        pad_packetizer.WriteAllPADs(output_fd);
+        pad_packetizer.WriteAllPADs(*output_queue);
 
         // sleep until next run
         next_run += std::chrono::seconds(sleepdelay);
         std::this_thread::sleep_until(next_run);
     }
 
-
-    // cleanup
-    if(close(output_fd)) {
-        perror("ODR-PadEnc Error: failed to close output");
-        return 1;
-    }
 
 #if HAVE_MAGICKWAND
     MagickWandTerminus();
