@@ -27,6 +27,8 @@
     \author Stefan Pöschel <odr@basicmaster.de>
 */
 
+#include <stdexcept>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include "pad_common.h"
 
 
@@ -134,9 +136,6 @@ pad_t* PADPacketizer::GetPAD() {
 
 void PADPacketizer::WriteAllPADs(boost::interprocess::message_queue& output_queue, int limit)
 {
-    size_t error_count = 0;
-    size_t error_bytes = 0;
-
     // output a limited amount of PADs (-1 = no limit)
     for (int i = 0; i != limit; i++) {
         pad_t* pad = GetPAD();
@@ -148,18 +147,21 @@ void PADPacketizer::WriteAllPADs(boost::interprocess::message_queue& output_queu
         }
 
         try{
-            output_queue.send(&(*pad)[0], pad->size(), 0);
+            auto waitUntil = boost::posix_time::microsec_clock::universal_time() + boost::posix_time::seconds(3);
+            if(output_queue.timed_send(&(*pad)[0], pad->size(), 0, waitUntil) == false){
+                throw std::runtime_error("Unable to write to queue for 3 seconds!");
+            }
         }
         catch(std::exception& ex){
-            error_count++;
-            error_bytes += pad->size();
+            //make a very hard error. Exit immediatly and our watchdog will restart us
+            fprintf(stderr, "ODR-PadEnc Error: Could not write PAD to queue (%s)", ex.what().c_str());
+            abort();
         }
 
         delete pad;
     }
 
-    if (error_count)
-        fprintf(stderr, "ODR-PadEnc Error: Could not write %zu PAD(s) with %zu Bytes\n", error_count, error_bytes);
+    
 }
 
 
