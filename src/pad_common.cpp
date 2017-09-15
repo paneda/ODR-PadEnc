@@ -154,7 +154,7 @@ void PADPacketizer::WriteAllPADs(boost::interprocess::message_queue& output_queu
         }
         catch(std::exception& ex){
             //make a very hard error. Exit immediatly and our watchdog will restart us
-            fprintf(stderr, "ODR-PadEnc Error: Could not write PAD to queue (%s)", ex.what().c_str());
+            fprintf(stderr, "ODR-PadEnc Error: Could not write PAD to queue (%s)", ex.what());
             abort();
         }
 
