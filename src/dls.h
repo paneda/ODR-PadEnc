@@ -148,8 +148,9 @@ private:
     CharsetConverter charset_converter;
     bool dls_toggle;
     DL_STATE dl_state_prev;
+    int forceToggleAtStartup;
 public:
-    DLSManager(PADPacketizer* pad_packetizer) : pad_packetizer(pad_packetizer), dls_toggle(false) {}
+    DLSManager(PADPacketizer* pad_packetizer) : pad_packetizer(pad_packetizer), dls_toggle(false), forceToggleAtStartup(2) {}
     void writeDLS(const std::string& dls_file, const DL_PARAMS& dl_params);
 };
 
