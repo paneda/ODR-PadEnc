@@ -46,6 +46,8 @@
 #include <fstream>
 #include <iostream>
 #include <algorithm>
+#include <stdlib.h>
+#include <time.h>
 
 
 // --- MSCDG -----------------------------------------------------------------
@@ -157,7 +159,12 @@ class History {
         History() : History(MAXHISTORYLEN) {}
         History(size_t hist_size) :
             m_hist_size(hist_size),
-            m_last_given_fidx(0) {}
+            m_last_given_fidx(0)
+            {
+                //assign a random fidx id to ensure images are sent as new after a restart
+                srand (time(NULL));
+                m_last_given_fidx = rand() % MAXSLIDEID;
+            }
         void disp_database();
         // controller of id base on database
         int get_fidx(const char* filepath);
