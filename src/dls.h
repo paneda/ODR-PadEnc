@@ -151,6 +151,7 @@ private:
 public:
     DLSManager(PADPacketizer* pad_packetizer) : pad_packetizer(pad_packetizer), dls_toggle(false) {}
     void writeDLS(const std::string& dls_file, const DL_PARAMS& dl_params);
+    bool always_dls_toggle;
 };
 
 #endif /* DLS_H_ */
