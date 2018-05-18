@@ -72,32 +72,33 @@ static void usage(const char* name) {
 #endif
                     );
     fprintf(stderr, "Usage: %s [OPTIONS...]\n", name);
-    fprintf(stderr, " -d, --dir=DIRNAME      Directory to read images from.\n"
-                    " -e, --erase            Erase slides from DIRNAME once they have\n"
-                    "                          been encoded.\n"
-                    " -s, --sleep=DELAY      Wait DELAY seconds between each slide\n"
-                    "                          Default: %d\n"
-                    " -o, --output=QUEUE_NAME  boost message queue to write PAD data into.\n"
-                    "                          Default: /tmp/pad.fifo\n"
-                    " -t, --dls=FILENAME     FIFO or file to read DLS text from.\n"
-                    "                          If specified more than once, use next file after DELAY seconds.\n"
-                    " -p, --pad=LENGTH       Set the pad length.\n"
-                    "                          Possible values: %s\n"
-                    "                          Default: 58\n"
-                    " -c, --charset=ID       ID of the character set encoding used for DLS text input.\n"
-                    "                          ID =  0: Complete EBU Latin based repertoire\n"
-                    "                          ID =  6: ISO/IEC 10646 using UCS-2 BE\n"
-                    "                          ID = 15: ISO/IEC 10646 using UTF-8\n"
-                    "                          Default: 15\n"
-                    " -r, --remove-dls       Always insert a DLS Remove Label command when replacing a DLS text.\n"
-                    " -C, --raw-dls          Do not convert DLS texts to Complete EBU Latin based repertoire\n"
-                    "                          character set encoding.\n"
-                    " -R, --raw-slides       Do not process slides. Integrity checks and resizing\n"
-                    "                          slides is skipped. Use this if you know what you are doing !\n"
-                    "                          It is useful only when -d is used\n"
-                    " -m, --max-seg-len      Sets the maximum segment length. Must be between 250 and 8189 \n"
-                    " -n, --no-omit-ci       Never omit CI's\n"
-                    " -v, --verbose          Print more information to the console\n",
+    fprintf(stderr, " -d, --dir=DIRNAME       Directory to read images from.\n"
+                    " -e, --erase             Erase slides from DIRNAME once they have\n"
+                    "                           been encoded.\n"
+                    " -s, --sleep=DELAY       Wait DELAY seconds between each slide\n"
+                    "                           Default: %d\n"
+                    " -o, --output=QUEUE_NAME   boost message queue to write PAD data into.\n"
+                    "                           Default: /tmp/pad.fifo\n"
+                    " -t, --dls=FILENAME      FIFO or file to read DLS text from.\n"
+                    "                           If specified more than once, use next file after DELAY seconds.\n"
+                    " -p, --pad=LENGTH        Set the pad length.\n"
+                    "                           Possible values: %s\n"
+                    "                           Default: 58\n"
+                    " -c, --charset=ID        ID of the character set encoding used for DLS text input.\n"
+                    "                           ID =  0: Complete EBU Latin based repertoire\n"
+                    "                           ID =  6: ISO/IEC 10646 using UCS-2 BE\n"
+                    "                           ID = 15: ISO/IEC 10646 using UTF-8\n"
+                    "                           Default: 15\n"
+                    " -r, --remove-dls        Always insert a DLS Remove Label command when replacing a DLS text.\n"
+                    " -C, --raw-dls           Do not convert DLS texts to Complete EBU Latin based repertoire\n"
+                    "                           character set encoding.\n"
+                    " -R, --raw-slides        Do not process slides. Integrity checks and resizing\n"
+                    "                           slides is skipped. Use this if you know what you are doing !\n"
+                    "                           It is useful only when -d is used\n"
+                    " -m, --max-seg-len       Sets the maximum segment length. Must be between 250 and 8189 \n"
+                    " -n, --no-omit-ci        Never omit CI's\n"
+                    " -a, --always-dls-toggle Always consider dls-text as new, even on repetitions.\n"
+                    " -v, --verbose           Print more information to the console\n",
             SLEEPDELAY_DEFAULT, PADPacketizer::ALLOWED_PADLEN.c_str());
 }
 
@@ -165,6 +166,7 @@ int main(int argc, char *argv[]) {
     bool erase_after_tx = false;
     int  sleepdelay = SLEEPDELAY_DEFAULT;
     bool raw_slides = false;
+    bool always_dls_toggle;
     DL_PARAMS dl_params;
 
     const char* sls_dir = NULL;
@@ -189,6 +191,7 @@ int main(int argc, char *argv[]) {
         {"no-omit-ci", no_argument,        0, 'n'},
         {"help",       no_argument,        0, 'h'},
         {"verbose",    no_argument,        0, 'v'},
+        {"always-dls-toggle", no_argument, 0, 'a'},
         {0,0,0,0},
     };
 
@@ -233,6 +236,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'v':
                 verbose++;
+                break;
+            case 'a':
+                always_dls_toggle = true;
                 break;
             case '?':
             case 'h':
@@ -340,6 +346,8 @@ int main(int argc, char *argv[]) {
     PADPacketizer pad_packetizer(padlen, no_omit_ci);
     DLSManager dls_manager(&pad_packetizer);
     SLSManager sls_manager(&pad_packetizer, max_segment_length);
+
+    dls_manager.always_dls_toggle = always_dls_toggle;
 
     std::list<slide_metadata_t> slides_to_transmit;
     History slides_history;
