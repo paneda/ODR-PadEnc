@@ -371,8 +371,8 @@ int main(int argc, char *argv[]) {
     while(!do_exit) {
         // try to read slides dir (if present)
         if (sls_dir && slides_to_transmit.empty()) {
-            if(!read_slides_dir(sls_dir, slides_history, slides_to_transmit))
-                return 1;
+            read_slides_dir(sls_dir, slides_history, slides_to_transmit);
+            //treat missing directory the same as an empty directory.
 
             // sort the list in fidx order
             slides_to_transmit.sort();
