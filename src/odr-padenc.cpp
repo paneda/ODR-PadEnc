@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
     bool erase_after_tx = false;
     int  sleepdelay = SLEEPDELAY_DEFAULT;
     bool raw_slides = false;
-    bool always_dls_toggle;
+    bool always_dls_toggle = false;
     DL_PARAMS dl_params;
 
     const char* sls_dir = NULL;
@@ -344,10 +344,8 @@ int main(int argc, char *argv[]) {
 #endif
 
     PADPacketizer pad_packetizer(padlen, no_omit_ci);
-    DLSManager dls_manager(&pad_packetizer);
+    DLSManager dls_manager(&pad_packetizer, always_dls_toggle);
     SLSManager sls_manager(&pad_packetizer, max_segment_length);
-
-    dls_manager.always_dls_toggle = always_dls_toggle;
 
     std::list<slide_metadata_t> slides_to_transmit;
     History slides_history;
